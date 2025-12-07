@@ -1,5 +1,5 @@
 # Jogo de Batalha Naval - P5.js
-
+- click aqui para jogar: [Batalha Naval](https://pessoa736.github.io/Jogo-de-batalha-naval-no-p5.js/)
 ## Sobre o Projeto
 Este é meu projeto para a Avaliação 3 da disciplina de Lógica de Programação (LoP), ministrada pelo professor Marconi Rodrigues. O jogo "Batalha Naval" foi desenvolvido utilizando a plataforma P5.js.
 
