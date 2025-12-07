@@ -1,410 +1,240 @@
 
+const telaW = 800
+const telaH = 600
+const quantidadeDeCasas = 20
+const tamanhoDoSunmario = 3
 
-const LARGURA = 800;
-const ALTURA = 600;
+const paletaDeCores=[
+  "#ededed", // branco
+  "#323232", //preto
+  "#24a", // azul
+  "#a24", // vermelho
+  "#4a2", // verde
+  "#989898",  // cinza
+  "rgba(0,0,0,0.4)" // preto transparente
+]
 
-let tela = 3;
-let frameAnimacao = 0;
-let imagens = [];
 
-let cores = [];
 
-let posicaoSubmarino = 0;
-let disparosRestantes = 3;
-let acertou = false;
+const tamanhoDaCasaW= telaW * (1/20) * 0.8
+const tamanhoDaCasaH= telaH * 0.05
+var coresDasCasas = []
 
-let musicaVitoria;
-let musicaDerrota;
-let audioLiberado = false;
-let vinhetaImagem;
+var posSubmarino = 0
+
+var sprsSubmarino = [] // 0 submarino destruido e 1 inteiro
+var animSubmarino = []
+var timeAnim = 0
+
+var imgSubmarinoInteiro
+var imgSubmarinoExplodido
+
+var imagenVinheta
+
+var musicas = [] // 0 para derrota e 1 para musica de ganhar 
+
+var telas = 0 //// 0 anim, 1 jogo, 2 resultado
+var disparosRestantes = 3
+
+
+var gameBoxX = [], gameBoxY = [], gameBoxW = [], gameBoxH = [], gameBoxText = [], gameBoxTextSize = []
+var numeroDeBox = 0
+
+var boxDeResultadoX = [], boxDeResultadoY = [], boxDeResultadoW = [], boxDeResultadoH = [], boxDeResultadoText = [], boxDeResultadoTextSize = []
+var numeroDeResultBox = 0
+
 
 
 
 function preload() {
-  imagens[0] = loadImage('asserts/submarino1.png');
-  imagens[1] = loadImage('asserts/submarino2.png');
-  imagens[2] = loadImage('asserts/submarino3.png');
-  imagens[3] = loadImage('asserts/submarino4.png');
-  imagens[4] = loadImage('asserts/submarino5.png');
+  animSubmarino[0] = loadImage('asserts/submarino1.png');
+  animSubmarino[1] = loadImage('asserts/submarino2.png');
+  animSubmarino[2] = loadImage('asserts/submarino3.png');
+  animSubmarino[3] = loadImage('asserts/submarino4.png');
+  animSubmarino[4] = loadImage('asserts/submarino5.png');
   
-  musicaVitoria = loadSound('asserts/vitoria.mp3');
-  musicaDerrota = loadSound('asserts/derrota.mp3');
+  musicas[1] = loadSound('asserts/vitoria.mp3');
+  musicas[0] = loadSound('asserts/derrota.mp3');
   
-  vinhetaImagem = loadImage('asserts/vinheta_lop.png');
+  imagenVinheta = loadImage('asserts/vinheta_lop.png');
+  imgSubmarinoInteiro = loadImage('asserts/submarioninteiro.png');
+  imgSubmarinoExplodido = loadImage('asserts/submarionexplodido.png');
 }
-
 
 
 
 function setup() {
-  createCanvas(LARGURA, ALTURA);
+  createCanvas(telaW, telaH)
   
-  for (let i = 0; i < 20; i++) {
-    cores[i] = color(180); // cinza base
-  }
-  
-  posicaoSubmarino = floor(random(0, 18));
+  for (let i= 0; i<20; i++) coresDasCasas[i] = paletaDeCores[5]; /// colocando todas as casas em cinza
+
+  posSubmarino = floor(random(0, quantidadeDeCasas - tamanhoDoSunmario))
+
+
+  // carregamento das caixas de dialogo da tela do  jogo
+  let BoxI = 0
+
+  gameBoxW[BoxI] = telaW*0.4; gameBoxH[BoxI] = telaH*0.1; gameBoxX[BoxI] = telaW/2 - gameBoxW[BoxI]/2; gameBoxY[BoxI] = telaH/8  - gameBoxH[BoxI]/2 
+  gameBoxText[BoxI] = "Bem vindo a batalha naval"; gameBoxTextSize[BoxI] = 24
+  BoxI++
+
+  gameBoxW[BoxI] = telaW*0.75; gameBoxH[BoxI] = telaH*0.075; gameBoxX[BoxI] = telaW/2 - gameBoxW[BoxI]/2; gameBoxY[BoxI] = telaH*0.25  - gameBoxH[BoxI]/2 
+  gameBoxText[BoxI] = "abaixo mos temos 20 posições do mar, aonde existe um submario de tamanho 3\n(ocupa 3 quadrados). Seu objetivo é acertá-lo tendo 3 disparos";  gameBoxTextSize[BoxI] = 16
+  BoxI++
+
+
+  numeroDeBox = floor((gameBoxH.length + gameBoxW.length + gameBoxX.length + gameBoxY.length + gameBoxText.length + gameBoxTextSize.length)/6)
+
+
+
+
+  // carregamento das caixas de dialogo da tela de resultado
+  BoxI = 0
+
+  boxDeResultadoW[BoxI] = telaW*0.2; boxDeResultadoH[BoxI] = telaH*0.10; boxDeResultadoX[BoxI] = telaW/2 - boxDeResultadoW[BoxI]/2; boxDeResultadoY[BoxI] = telaH*0.175  - boxDeResultadoH[BoxI]/2 
+  boxDeResultadoText[BoxI] = "Resultado"; boxDeResultadoTextSize[BoxI] = 28
+  BoxI++
+
+  boxDeResultadoW[BoxI] = telaW*0.45; boxDeResultadoH[BoxI] = telaH*0.05; boxDeResultadoX[BoxI] = telaW/2 - boxDeResultadoW[BoxI]/2; boxDeResultadoY[BoxI] = telaH*0.85  - boxDeResultadoH[BoxI]/2 
+  boxDeResultadoText[BoxI] = "Clique em qualque canto para recomeçar"; boxDeResultadoTextSize[BoxI] = 18
+  BoxI++
+
+  numeroDeResultBox = floor((boxDeResultadoH.length + boxDeResultadoW.length + boxDeResultadoX.length + boxDeResultadoY.length + boxDeResultadoText.length + boxDeResultadoTextSize.length)/6)
 }
 
 
+function draw(){
+  background(paletaDeCores[1])
+  
+  
+  if (telas == 0) {
+    for (let i=0; i<musicas.length; i++) if (musicas[i] && musicas[i].isPlaying()) musicas[i].stop();
+
+    
+    let frameAtual = floor(timeAnim/20)%5
+    image(animSubmarino[frameAtual], 0,0, telaW, telaH)
+    timeAnim++
+    
+    if (floor(timeAnim/60) >= 6) telas = 1;
+    
+    let w= telaW*0.3, h=telaH*0.1
+    let x = telaW/2 - w/2, y = telaH*0.9 - h/2 
+
+    fill(paletaDeCores[6])
+    rect(x, y, w, h, Math.sqrt(telaH**2+telaW**2)*0.01)
+    
+    fill(paletaDeCores[0])
+    textSize(16)
+    textAlign(CENTER, CENTER)
+    text("clique em qualquer canto para \npular a animação", x+w/2, y+h/2)
+  
+  
+  } else if (telas == 1){
+    
+    for (let i=0; i<musicas.length; i++) if (musicas[i] && musicas[i].isPlaying()) musicas[i].stop();
+
+    /// renderizamento das caixas de texto
+    for (let i = 0; i<numeroDeBox; i++){
+      let x = gameBoxX[i]; let y = gameBoxY[i]; let h = gameBoxH[i]; let w = gameBoxW[i]
+      let _textsize = gameBoxTextSize[i]
+      
+      if (x && y && h && w){
+        fill(paletaDeCores[6])
+        rect(x, y, w, h, Math.sqrt(telaH**2+telaW**2)*0.01)
+        
+        fill(paletaDeCores[0])
+        textAlign(CENTER, CENTER)
+        if (_textsize) textSize(_textsize);
+        text(gameBoxText[i] || null, x+w/2, y+h/2)
+      }
+    }
+    
+  } else if (telas == 2) {
 
 
-function draw() {
-  if (tela == 0) {
-    background(40);
-    let indiceImagem = floor(frameAnimacao / 20) % imagens.length;
-    image(imagens[indiceImagem], 0, 0, LARGURA, ALTURA);
-    
-    frameAnimacao = frameAnimacao + 1;
-
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 220, 40, 440, 60, 10);
-    
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(32);
-    text("BATALHA NAVAL", LARGURA / 2, 70);
-    
-    
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 100, ALTURA - 90, 200, 50, 10);
-    
-    fill(255);
-    textSize(20);
-    textAlign(CENTER, CENTER);
-    text("Clique para começar", LARGURA / 2, ALTURA - 65);
-    
-    if (vinhetaImagem) {
-      image(vinhetaImagem, 0, 0, LARGURA, ALTURA);
-    }
-    
-    
-  } else if (tela == 1) {
-    background(25);
-    
-    
-    // pulso de tensão
-    let cicloPulso = frameCount % 120;
-    let fatorPulso;
-    
-    if (cicloPulso < 60) fatorPulso = cicloPulso / 60;
-    else fatorPulso = (120 - cicloPulso) / 60;
-    
-    let pulso = 60 + fatorPulso * 100;
-    fill(0, 0, 0, pulso);
-    rect(0, 0, width, height);
-    
-    
-    
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 200, 10, 400, 50, 10);
-    
-    
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(30);
-    text("BATALHA NAVAL", LARGURA / 2, 35);
-    
-    
-    
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 300, 80, 600, 70, 10);
-    
-    
-    fill(255);
-    textSize(16);
-    textAlign(CENTER, CENTER);
-    text("Clique em uma das 20 casas para atirar!", LARGURA / 2, 105);
-    text("O submarino ocupa 3 casas consecutivas", LARGURA / 2, 135);
-    
-    fill(120, 120, 120, 220);
-    rect(LARGURA / 2 - 180, 170, 360, 45, 10);
-    
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(20);
-    text("Disparos restantes: " + disparosRestantes, LARGURA / 2, 192);
-    
-    let cicloAlerta = frameCount % 100;
-    let fatorAlerta;
-    if (cicloAlerta < 50) {
-      fatorAlerta = cicloAlerta / 50;
-    } else {
-      fatorAlerta = (100 - cicloAlerta) / 50;
-    }
-    let alertaPulso = 160 + fatorAlerta * 90;
-    fill(alertaPulso);
-    
-    let larguraCasa = LARGURA * 0.04;
-    let alturaCasa = ALTURA * 0.1;
-    let espacamento = LARGURA * 0.003;
-    let inicioX = (LARGURA - (larguraCasa + espacamento) * 20) / 2;
-    let y = ALTURA * 0.7;
-    let totalLargura = (larguraCasa + espacamento) * 20 - espacamento;
-    let bordaR = 80 + pulso * 0.3;
-    let bordaG = 120 + pulso * 0.2;
-    let bordaB = 200;
-    fill(bordaR, bordaG, bordaB, 200);
-    rect(inicioX - 8, y - 8, totalLargura + 16, alturaCasa + 16, 6);
-    
-    for (let i = 0; i < 20; i++) {
-      let x = inicioX + i * (larguraCasa + espacamento);
+    // renderizamento das caixas de texto da tela de resultado
+    for (let i = 0; i<numeroDeResultBox; i++){
+      let x = boxDeResultadoX[i]; let y = boxDeResultadoY[i]; let h = boxDeResultadoH[i]; let w = boxDeResultadoW[i]
+      let _textsize = boxDeResultadoTextSize[i]
       
-      fill(40);
-      rect(x - 2, y - 2, larguraCasa + 4, alturaCasa + 4, 4);
-      
-      fill(cores[i]);
-      rect(x, y, larguraCasa, alturaCasa, 3);
-      
-      fill(255);
-      textSize(12);
-      textAlign(CENTER, CENTER);
-      text(i + 1, x + larguraCasa / 2, y + alturaCasa / 2);
-    }
-    
-    if (acertou || disparosRestantes == 0) {
-      image(imagens[0], 0, 0, LARGURA, ALTURA);
-    }
-    
-    if (vinhetaImagem) {
-      image(vinhetaImagem, 0, 0, LARGURA, ALTURA);
-    }
-    
-  } else if (tela == 2) {
-    background(10, 20, 40);
-    
-    let raioExplosao = 80 + (sin(frameCount * 0.1) + 1) * 60;
-    let brilho = 150 + (sin(frameCount * 0.2) + 1) * 50;
-    
-    for (let r = raioExplosao; r > 0; r = r - 8) {
-      let proporcao = 1;
-      if (raioExplosao != 0) {
-        proporcao = r / raioExplosao;
+      if (x && y && h && w){
+        fill(paletaDeCores[6])
+        rect(x, y, w, h, Math.sqrt(telaH**2+telaW**2)*0.01)
+        
+        fill(paletaDeCores[0])
+        textAlign(CENTER, CENTER)
+        if (_textsize) textSize(_textsize);
+        text(boxDeResultadoText[i] || null, x+w/2, y+h/2)
       }
-      let alphaExplosao = 255 * proporcao;
-      fill(255, brilho, 0, alphaExplosao);
-      ellipse(LARGURA / 2, ALTURA / 2, r * 2, r * 2);
-    }
-    
-    image(imagens[imagens.length - 1], random(-4, 4), random(-4, 4), LARGURA, ALTURA);
-    
-    let larguraCasaV = LARGURA * 0.04;
-    let alturaCasaV = ALTURA * 0.1;
-    let espacamentoV = LARGURA * 0.003;
-    let inicioXV = (LARGURA - (larguraCasaV + espacamentoV) * 20) / 2;
-    let yV = ALTURA * 0.7;
-    let totalLarguraV = (larguraCasaV + espacamentoV) * 20 - espacamentoV;
-    let bordaRV = 80 + 40;
-    let bordaGV = 120 + 30;
-    let bordaBV = 200;
-    fill(bordaRV, bordaGV, bordaBV, 220);
-    rect(inicioXV - 8, yV - 8, totalLarguraV + 16, alturaCasaV + 16, 6);
-    
-    for (let j = 0; j < 20; j++) {
-      let xV = inicioXV + j * (larguraCasaV + espacamentoV);
-      fill(40);
-      rect(xV - 2, yV - 2, larguraCasaV + 4, alturaCasaV + 4, 4);
-      
-      let corCasaV = cores[j];
-      if (j >= posicaoSubmarino && j < posicaoSubmarino + 3) {
-        corCasaV = color(255, 0, 0);
-      }
-      fill(corCasaV);
-      rect(xV, yV, larguraCasaV, alturaCasaV, 3);
-      
-      fill(255);
-      textSize(12);
-      textAlign(CENTER, CENTER);
-      text(j + 1, xV + larguraCasaV / 2, yV + alturaCasaV / 2);
-    }
-    
-    fill(0, 0, 0, 210);
-    rect(LARGURA / 2 - 260, 60, 520, 90, 18);
-    
-    fill(255, 230, 80);
-    textAlign(CENTER, CENTER);
-    textSize(60);
-    text("VITÓRIA ÉPICA!", LARGURA / 2, 95);
-    
-    fill(0, 0, 0, 220);
-    rect(LARGURA / 2 - 300, 165, 600, 90, 16);
-    
-    fill(255);
-    textSize(26);
-    text("Você detonou o submarino inimigo!", LARGURA / 2, 195);
-    textSize(18);
-    text("Ele estava nas casas " + (posicaoSubmarino + 1) + " - " + (posicaoSubmarino + 3), LARGURA / 2, 225);
-    
-    fill(0, 0, 0, 220);
-    rect(LARGURA / 2 - 200, 260, 400, 65, 14);
-    
-    fill(180, 255, 180);
-    textSize(22);
-    text("Disparos restantes: " + disparosRestantes, LARGURA / 2, 292);
-    
-    let brilhoBotao = 120 + (sin(frameCount * 0.25) + 1) * 60;
-    fill(0, 0, 0, 220);
-    rect(LARGURA / 2 - 220, ALTURA - 120, 440, 70, 20);
-    
-    fill(255, brilhoBotao, 120);
-    textSize(22);
-    text("Clique para desafiar outro submarino", LARGURA / 2, ALTURA - 85);
-    
-    if (vinhetaImagem) {
-      image(vinhetaImagem, 0, 0, LARGURA, ALTURA);
-    }
-    
-  } else if (tela == 3) {
-    background(60);
-    image(imagens[0], 0, 0, LARGURA, ALTURA);
-    
-    let larguraCasaP = LARGURA * 0.04;
-    let alturaCasaP = ALTURA * 0.1;
-    let espacamentoP = LARGURA * 0.003;
-    let inicioXP = (LARGURA - (larguraCasaP + espacamentoP) * 20) / 2;
-    let yP = ALTURA * 0.7;
-    let totalLarguraP = (larguraCasaP + espacamentoP) * 20 - espacamentoP;
-    let bordaRP = 80;
-    let bordaGP = 0;
-    let bordaBP = 0;
-    fill(bordaRP, bordaGP, bordaBP, 220);
-    rect(inicioXP - 8, yP - 8, totalLarguraP + 16, alturaCasaP + 16, 6);
-    
-    for (let k = 0; k < 20; k++) {
-      let xP = inicioXP + k * (larguraCasaP + espacamentoP);
-      fill(40);
-      rect(xP - 2, yP - 2, larguraCasaP + 4, alturaCasaP + 4, 4);
-      
-      let corCasaP = cores[k];
-      if (k >= posicaoSubmarino && k < posicaoSubmarino + 3) {
-        corCasaP = color(200, 0, 0);
-      }
-      fill(corCasaP);
-      rect(xP, yP, larguraCasaP, alturaCasaP, 3);
-      
-      fill(255);
-      textSize(12);
-      textAlign(CENTER, CENTER);
-      text(k + 1, xP + larguraCasaP / 2, yP + alturaCasaP / 2);
-    }
-    
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 220, 80, 440, 70, 10);
-    
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(50);
-    text("GAME OVER", LARGURA / 2, 115);
-    
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 260, 180, 520, 80, 10);
-    
-    fill(255);
-    textSize(25);
-    text("O submarino escapou!", LARGURA / 2, 210);
-    textSize(18);
-    text("Ele estava nas casas " + (posicaoSubmarino + 1) + " - " + (posicaoSubmarino + 3), LARGURA / 2, 240);
-    
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 180, 280, 360, 60, 10);
-    
-    fill(255);
-    textSize(20);
-    text("Disparos restantes: " + disparosRestantes, LARGURA / 2, 310);
-    
-    fill(0, 0, 0, 200);
-    rect(LARGURA / 2 - 200, ALTURA - 110, 400, 60, 10);
-    
-    fill(255);
-    textSize(20);
-    text("Clique para jogar novamente", LARGURA / 2, ALTURA - 80);
-    
-    if (vinhetaImagem) {
-      image(vinhetaImagem, 0, 0, LARGURA, ALTURA);
     }
   }
+
+  if (telas == 1 || telas == 2){
+    for (let i=0; i<20; i++){
+      fill(coresDasCasas[i])
+      rect(telaW/2 - tamanhoDaCasaW*(10-i), telaH*0.75, tamanhoDaCasaW, tamanhoDaCasaH)
+    }
+
+    if (telas == 2) {
+      let xSub = telaW/2 - tamanhoDaCasaW*(10-posSubmarino);
+      let ySub = telaH*0.75;
+      let wSub = tamanhoDaCasaW * tamanhoDoSunmario;
+      let hSub = tamanhoDaCasaH * 2;
+      
+      if (boxDeResultadoText[0] == "Vitória!") {
+          if (imgSubmarinoExplodido) image(imgSubmarinoExplodido, xSub, ySub - hSub/4, wSub, hSub);
+      } else {
+          if (imgSubmarinoInteiro) image(imgSubmarinoInteiro, xSub, ySub - hSub/4, wSub, hSub);
+      }
+    }
+  }
+
+  //venheta
+  image(imagenVinheta, -10, -10, telaW+20, telaH+20)
 }
 
-function mouseClicked() {
-  if (!audioLiberado) {
-    if (typeof userStartAudio == 'function') {
-      userStartAudio();
-    } else if (typeof getAudioContext == 'function' && getAudioContext()) {
-      if (getAudioContext().state != 'running') {
-        getAudioContext().resume();
-      }
-    }
-    audioLiberado = true;
-  }
-  if (tela == 0) {
-    if (musicaVitoria && musicaVitoria.isPlaying()) {
-      musicaVitoria.stop();
-    }
-    if (musicaDerrota && musicaDerrota.isPlaying()) {
-      musicaDerrota.stop();
-    }
-    tela = 1;
-  } else if (tela == 1) {
-    let larguraCasa = LARGURA * 0.04; // escala com a largura da tela
-    let alturaCasa = ALTURA * 0.1; // escala com a altura da tela
-    let espacamento = LARGURA * 0.003; // espaçamento proporcional
-    let inicioX = (LARGURA - (larguraCasa + espacamento) * 20) / 2;
-    let y = ALTURA * 0.7; // posição vertical mais próxima da base
-    
-    for (let i = 0; i < 20; i++) {
-      let x = inicioX + i * (larguraCasa + espacamento);
+function mouseClicked(){
+  if (telas == 0){
+    telas = 1;
+  } else if (telas == 1){
+    for (let i=0; i<quantidadeDeCasas; i++){
+      let x = telaW/2 - tamanhoDaCasaW*(10-i)
+      let y = telaH*0.75
       
-      if (mouseX > x && mouseX < x + larguraCasa && 
-          mouseY > y && mouseY < y + alturaCasa) {
-        
-        if (red(cores[i]) == 255 || green(cores[i]) == 255) {
-          return;
-        }
-        
-        disparosRestantes = disparosRestantes - 1;
-        
-        if (i >= posicaoSubmarino && i < posicaoSubmarino + 3) {
-          cores[i] = color(255);
-          cores[posicaoSubmarino] = color(255);
-          cores[posicaoSubmarino + 1] = color(255);
-          cores[posicaoSubmarino + 2] = color(255);
-          acertou = true;
-          tela = 2;
-          if (musicaVitoria) {
-            musicaVitoria.play();
+      if (mouseX > x && mouseX < x + tamanhoDaCasaW && mouseY > y && mouseY < y + tamanhoDaCasaH){
+        if (coresDasCasas[i] != paletaDeCores[5]) return; 
+
+        disparosRestantes--;
+
+        if (i >= posSubmarino && i < posSubmarino + tamanhoDoSunmario){
+          for(let k=0; k<tamanhoDoSunmario; k++){
+             coresDasCasas[posSubmarino+k] = paletaDeCores[3]; 
           }
+          telas = 2;
+          if (musicas[1]) musicas[1].play();
+          boxDeResultadoText[0] = "Vitória!";
         } else {
-          cores[i] = color(0);
-        }
-        
-        if (disparosRestantes == 0 && !acertou) {
-          cores[posicaoSubmarino] = color(200);
-          cores[posicaoSubmarino + 1] = color(200);
-          cores[posicaoSubmarino + 2] = color(200);
-          tela = 3;
-          if (musicaDerrota) {
-            musicaDerrota.play();
+          coresDasCasas[i] = paletaDeCores[1]; 
+          
+          if (disparosRestantes == 0){
+            telas = 2;
+            if (musicas[0]) musicas[0].play();
+            boxDeResultadoText[0] = "Derrota!";
+            for(let k=0; k<tamanhoDoSunmario; k++){
+               if (coresDasCasas[posSubmarino+k] == paletaDeCores[5]) {
+                   coresDasCasas[posSubmarino+k] = paletaDeCores[4]; 
+               }
+            }
           }
         }
-        
         break;
       }
     }
-  } else if (tela == 2 || tela == 3) {
-    if (musicaVitoria && musicaVitoria.isPlaying()) {
-      musicaVitoria.stop();
-    }
-    if (musicaDerrota && musicaDerrota.isPlaying()) {
-      musicaDerrota.stop();
-    }
-    tela = 0;
-    frameAnimacao = 0;
+  } else if (telas == 2) {
+    telas = 0;
     disparosRestantes = 3;
-    acertou = false;
-    posicaoSubmarino = floor(random(0, 18));
-    
-    for (let i = 0; i < 20; i++) {
-      cores[i] = color(180);
-    }
+    posSubmarino = floor(random(0, quantidadeDeCasas - tamanhoDoSunmario));
+
+    for (let i= 0; i<quantidadeDeCasas; i++) coresDasCasas[i] = paletaDeCores[5];
   }
 }
