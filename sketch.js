@@ -8,8 +8,8 @@ const paletaDeCores=[
   "#ededed", // branco
   "#323232", //preto
   "#24a", // azul
-  "#a24", // vermelho
   "#4a2", // verde
+  "#a24", // vermelho
   "#989898",  // cinza
   "rgba(0,0,0,0.4)" // preto transparente
 ]
@@ -82,6 +82,10 @@ function setup() {
   gameBoxText[BoxI] = "abaixo mos temos 20 posições do mar, aonde existe um submario de tamanho 3\n(ocupa 3 quadrados). Seu objetivo é acertá-lo tendo 3 disparos";  gameBoxTextSize[BoxI] = 16
   BoxI++
 
+  gameBoxW[BoxI] = telaW*0.3; gameBoxH[BoxI] = telaH*0.08; gameBoxX[BoxI] = telaW/2 - gameBoxW[BoxI]/2; gameBoxY[BoxI] = telaH*0.95  - gameBoxH[BoxI]/2 
+  gameBoxText[BoxI] = "Disparos restantes: " + disparosRestantes;  gameBoxTextSize[BoxI] = 20
+  BoxI++
+
 
   numeroDeBox = floor((gameBoxH.length + gameBoxW.length + gameBoxX.length + gameBoxY.length + gameBoxText.length + gameBoxTextSize.length)/6)
 
@@ -132,6 +136,8 @@ function draw(){
   } else if (telas == 1){
     
     for (let i=0; i<musicas.length; i++) if (musicas[i] && musicas[i].isPlaying()) musicas[i].stop();
+
+    gameBoxText[2] = "Disparos restantes: " + disparosRestantes;
 
     /// renderizamento das caixas de texto
     for (let i = 0; i<numeroDeBox; i++){
@@ -214,7 +220,7 @@ function mouseClicked(){
           if (musicas[1]) musicas[1].play();
           boxDeResultadoText[0] = "Vitória!";
         } else {
-          coresDasCasas[i] = paletaDeCores[1]; 
+          coresDasCasas[i] = paletaDeCores[2]; 
           
           if (disparosRestantes == 0){
             telas = 2;
