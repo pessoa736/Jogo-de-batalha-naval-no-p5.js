@@ -82,7 +82,7 @@ function setup() {
   gameBoxText[BoxI] = "abaixo mos temos 20 posições do mar, aonde existe um submario de tamanho 3\n(ocupa 3 quadrados). Seu objetivo é acertá-lo tendo 3 disparos";  gameBoxTextSize[BoxI] = 16
   BoxI++
 
-  gameBoxW[BoxI] = telaW*0.3; gameBoxH[BoxI] = telaH*0.08; gameBoxX[BoxI] = telaW/2 - gameBoxW[BoxI]/2; gameBoxY[BoxI] = telaH*0.95  - gameBoxH[BoxI]/2 
+  gameBoxW[BoxI] = telaW*0.3; gameBoxH[BoxI] = telaH*0.08; gameBoxX[BoxI] = telaW/2 - gameBoxW[BoxI]/2; gameBoxY[BoxI] = telaH*0.85  - gameBoxH[BoxI]/2 
   gameBoxText[BoxI] = "Disparos restantes: " + disparosRestantes;  gameBoxTextSize[BoxI] = 20
   BoxI++
 
