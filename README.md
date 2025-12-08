@@ -56,8 +56,6 @@ O projeto utiliza apenas as funções permitidas:
 **Professor**: Marconi Rodrigues  
 **Período**: Novembro/Dezembro 2025
 
-## Link do Vídeo Explicativo
-[ainda para fazer]
 
 ---
 
